@@ -8,22 +8,26 @@ const templates = [
     "Amor e Perda", "Queda e Redenção", "Virada de Destino"
 ];
 
+import { usePollinations } from '../../hooks/usePollinations';
+
 const StepScript: React.FC = () => {
     const { script, setScript, setStep } = useProjectStore();
     const [showTemplates, setShowTemplates] = useState(false);
-    const [isEnhancing, setIsEnhancing] = useState(false);
+    const { generateText, isLoading: isEnhancing } = usePollinations();
 
     const handleTemplateClick = (template: string) => {
         setScript(`Roteiro base para: ${template}\n\nCena 1: [Descreva a cena inicial]\nCena 2: [O conflito se apresenta]\nCena 3: [Clímax e resolução]`);
         setShowTemplates(false);
     };
 
-    const handleEnhance = () => {
-        setIsEnhancing(true);
-        setTimeout(() => {
-            setScript(script + "\n\n(Texto aprimorado pela IA...)");
-            setIsEnhancing(false);
-        }, 1500);
+    const handleEnhance = async () => {
+        if (!script) return;
+        const prompt = `Melhore o seguinte roteiro de vídeo, tornando-o mais descritivo e emocionante, mantendo a estrutura de cenas:\n\n${script}`;
+        const enhancedScript = await generateText(prompt, "Você é um roteirista profissional de cinema.");
+
+        if (enhancedScript) {
+            setScript(enhancedScript);
+        }
     };
 
     return (

@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import { Check, Copy, ExternalLink, ShieldCheck, Database, CreditCard, Clock, User } from 'lucide-react';
+import { Check, ExternalLink, Database, CreditCard, Clock, User, Loader2 } from 'lucide-react';
 
 const OnboardingPage: React.FC = () => {
     const navigate = useNavigate();
-    const { updateUser } = useAuthStore();
+    const { user, setImageFxCookies } = useAuthStore();
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [apiKey, setApiKey] = useState('');
+    const [cookies, setCookies] = useState('');
     const [isConnecting, setIsConnecting] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleConnect = () => {
         setIsConnecting(true);
@@ -21,9 +24,29 @@ const OnboardingPage: React.FC = () => {
         }, 1500);
     };
 
-    const handleFinish = () => {
-        updateUser({ apiKey, onboardingCompleted: true });
-        navigate('/app/dashboard'); // Go to main app
+    const handleConnectPollinations = async () => {
+        setLoading(true);
+
+        if (cookies) {
+            setImageFxCookies(cookies);
+        }
+
+        // Simulate connection delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        try {
+            if (user) {
+                await supabase.auth.updateUser({
+                    data: { onboarding_completed: true }
+                });
+            }
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('Error updating user:', error);
+            navigate('/dashboard');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -106,10 +129,11 @@ const OnboardingPage: React.FC = () => {
 
                         <div className="flex flex-col gap-4 max-w-xs mx-auto">
                             <button
-                                onClick={() => setStep(3)}
-                                className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                                onClick={handleConnectPollinations}
+                                disabled={loading}
+                                className="flex-1 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                             >
-                                Próximo
+                                {loading ? <Loader2 className="animate-spin" /> : 'Concluir'}
                             </button>
                         </div>
                     </div>
@@ -139,6 +163,16 @@ const OnboardingPage: React.FC = () => {
                             </div>
                         </div>
 
+                        <div className="mb-6">
+                            <label className="text-sm font-medium mb-2 block">Cole seus cookies aqui</label>
+                            <textarea
+                                value={cookies}
+                                onChange={(e) => setCookies(e.target.value)}
+                                placeholder='[{"name": "__Secure-1PSID", "value": "..."}]'
+                                className="w-full h-32 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            />
+                        </div>
+
                         <div className="flex gap-4">
                             <button
                                 onClick={() => setStep(2)}
@@ -147,10 +181,17 @@ const OnboardingPage: React.FC = () => {
                                 Voltar
                             </button>
                             <button
-                                onClick={handleFinish}
-                                className="flex-1 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                                onClick={handleConnectPollinations}
+                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-primary/50 transition-all flex items-center justify-center gap-2 group"
                             >
-                                Concluir
+                                {loading ? (
+                                    <Loader2 className="animate-spin" />
+                                ) : (
+                                    <>
+                                        Conectar e Começar <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

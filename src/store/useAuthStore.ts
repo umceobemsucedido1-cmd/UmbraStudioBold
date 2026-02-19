@@ -1,14 +1,16 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 
 interface AuthState {
     user: User | null;
     session: Session | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    imageFxCookies: string | null;
     initialize: () => Promise<void>;
-    signOut: () => Promise<void>;
+    logout: () => Promise<void>;
+    setImageFxCookies: (cookies: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -16,6 +18,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     session: null,
     isAuthenticated: false,
     isLoading: true,
+    imageFxCookies: localStorage.getItem('imageFxCookies'),
 
     initialize: async () => {
         set({ isLoading: true });
@@ -41,8 +44,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
     },
 
-    signOut: async () => {
+    logout: async () => {
         await supabase.auth.signOut();
-        set({ user: null, session: null, isAuthenticated: false });
+        localStorage.removeItem('imageFxCookies');
+        set({ user: null, session: null, isAuthenticated: false, imageFxCookies: null });
+    },
+
+    setImageFxCookies: (cookies: string) => {
+        localStorage.setItem('imageFxCookies', cookies);
+        set({ imageFxCookies: cookies });
     },
 }));

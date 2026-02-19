@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 
 const CookieConsent: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);

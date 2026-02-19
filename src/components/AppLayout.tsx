@@ -45,7 +45,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     {steps.map((step) => {
-                        const Icon = step.icon;
                         const isActive = currentStep === step.id;
                         const isCompleted = currentStep > step.id;
 

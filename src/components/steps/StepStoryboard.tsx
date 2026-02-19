@@ -2,17 +2,12 @@ import React, { useState } from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { Play, Download, RefreshCw, Edit2 } from 'lucide-react';
 
-// Helper to construct Pollinations URL
-const getPollinationsUrl = (prompt: string, seed: number, width: number, height: number) => {
-    const encodedPrompt = encodeURIComponent(prompt);
-    // Pollinations URL format: https://pollinations.ai/p/{prompt}?width={width}&height={height}&seed={seed}&model={model}
-    // Using image.pollinations.ai for direct image
-    return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
-};
+import { usePollinations } from '../../hooks/usePollinations';
 
 const StepStoryboard: React.FC = () => {
     const { scenes, style, aspectRatio, setStep } = useProjectStore();
     const [generatingAll, setGeneratingAll] = useState(false);
+    const { generateImage } = usePollinations();
 
     const [refresher, setRefresher] = useState<Record<string, number>>({});
 
@@ -22,8 +17,13 @@ const StepStoryboard: React.FC = () => {
 
     const handleGenerateAll = () => {
         setGeneratingAll(true);
-        // In a real app, this would trigger batch generation logic
-        setTimeout(() => setGeneratingAll(false), 2000);
+        // Trigger generic refresh for all
+        const newRefresher = { ...refresher };
+        scenes.forEach(scene => {
+            newRefresher[scene.id] = (newRefresher[scene.id] || 0) + 1;
+        });
+        setRefresher(newRefresher);
+        setTimeout(() => setGeneratingAll(false), 1000); // Visual feedback
     };
 
     const width = aspectRatio === '16:9' ? 1280 : aspectRatio === '9:16' ? 720 : 1024;
@@ -50,7 +50,7 @@ const StepStoryboard: React.FC = () => {
                     // Construct prompt
                     const seed = index * 123 + (refresher[scene.id] || 0); // Deterministic prompt but refreshable
                     const prompt = `${style} style. ${scene.content}. detailed, high quality, cinematic lighting`;
-                    const imageUrl = getPollinationsUrl(prompt, seed, width, height); // using 'flux' as generic model placeholder
+                    const imageUrl = generateImage(prompt, { width, height, seed });
 
                     return (
                         <div key={scene.id} className="flex flex-col md:flex-row gap-6 bg-card border border-border rounded-xl p-6">

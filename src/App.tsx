@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
-
-// Placeholders for future pages
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import OnboardingPage from './pages/OnboardingPage';
@@ -23,6 +21,7 @@ function App() {
   const { initialize } = useAuthStore();
 
   useEffect(() => {
+    console.log('App Mounted. Initializing Auth...');
     initialize();
   }, [initialize]);
 
