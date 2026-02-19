@@ -1,78 +1,97 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
-import { ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Film, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const LoginPage: React.FC = () => {
-    const navigate = useNavigate();
-    const login = useAuthStore((state) => state.login);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Mock login
-        login({
-            id: '1',
-            name: 'User',
-            email: email,
-            onboardingCompleted: false,
-        });
-        navigate('/onboarding');
+        setLoading(true);
+        setError(null);
+
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) throw error;
+
+            navigate('/dashboard');
+        } catch (err: any) {
+            setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-2xl">
-                <Link to="/" className="text-muted-foreground hover:text-foreground flex items-center gap-2 mb-6 text-sm transition-colors">
-                    <ArrowLeft size={16} /> Voltar para o início
-                </Link>
+        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+            {/* Background Elements */}
+            <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:20px_20px]" />
+            <div className="absolute left-0 top-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute right-0 bottom-0 w-96 h-96 bg-accent/20 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2" />
 
-                <div className="flex border-b border-border mb-8">
-                    <div className="flex-1 pb-4 text-center border-b-2 border-primary font-bold text-primary cursor-default">
-                        Fazer login
-                    </div>
-                    <Link to="/signup" className="flex-1 pb-4 text-center text-muted-foreground hover:text-foreground transition-colors border-b-2 border-transparent hover:border-border">
-                        Criar conta
+            <div className="w-full max-w-md p-8 bg-card border border-border rounded-xl shadow-2xl relative z-10 animate-in fade-in zoom-in duration-500">
+                <div className="text-center mb-8">
+                    <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+                        <Film className="text-primary" /> Umbra Studio Bold
                     </Link>
+                    <h2 className="text-xl font-semibold text-foreground">Bem-vindo de volta</h2>
+                    <p className="text-sm text-muted-foreground">Entre para continuar seus projetos</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm">
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">
-                            Email
-                        </label>
+                        <label className="text-sm font-medium text-foreground">Email</label>
                         <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            id="email"
                             type="email"
+                            required
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="seu@email.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            required
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">
-                            Senha
-                        </label>
+                        <label className="text-sm font-medium text-foreground">Senha</label>
                         <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            id="password"
                             type="password"
+                            required
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            required
                         />
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full bg-primary text-primary-foreground h-10 rounded-md font-medium hover:bg-primary/90 transition-colors"
+                        disabled={loading}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
                     >
-                        Entrar
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Entrar'}
                     </button>
                 </form>
+
+                <div className="mt-6 text-center text-sm">
+                    <span className="text-muted-foreground">Não tem uma conta? </span>
+                    <Link to="/signup" className="font-medium text-primary hover:underline">
+                        Cadastre-se
+                    </Link>
+                </div>
             </div>
         </div>
     );

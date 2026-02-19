@@ -1,118 +1,142 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
-import { ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Film, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const SignupPage: React.FC = () => {
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const login = useAuthStore((state) => state.login);
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        agreeToTerms: false,
-    });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
-            alert("As senhas não coincidem!");
+        setError(null);
+
+        if (password !== confirmPassword) {
+            setError('As senhas não coincidem.');
             return;
         }
-        // Mock signup
-        login({
-            id: '2',
-            name: formData.name,
-            email: formData.email,
-            onboardingCompleted: false,
-        });
-        navigate('/onboarding');
+
+        setLoading(true);
+
+        try {
+            const { error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: name,
+                    },
+                },
+            });
+
+            if (error) throw error;
+
+            // Auto login logic usually handled by Supabase, but navigate to login or onboarding
+            navigate('/onboarding');
+        } catch (err: any) {
+            setError(err.message || 'Erro ao criar conta.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-2xl">
-                <Link to="/" className="text-muted-foreground hover:text-foreground flex items-center gap-2 mb-6 text-sm transition-colors">
-                    <ArrowLeft size={16} /> Voltar para o início
-                </Link>
+        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+            {/* Background Elements */}
+            <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:20px_20px]" />
+            <div className="absolute right-0 top-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute left-0 bottom-0 w-96 h-96 bg-accent/20 rounded-full blur-[100px] -translate-x-1/2 translate-y-1/2" />
 
-                <div className="flex border-b border-border mb-8">
-                    <Link to="/login" className="flex-1 pb-4 text-center text-muted-foreground hover:text-foreground transition-colors border-b-2 border-transparent hover:border-border">
-                        Fazer login
+            <div className="w-full max-w-md p-8 bg-card border border-border rounded-xl shadow-2xl relative z-10 animate-in fade-in zoom-in duration-500">
+                <div className="text-center mb-8">
+                    <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+                        <Film className="text-primary" /> Umbra Studio Bold
                     </Link>
-                    <div className="flex-1 pb-4 text-center border-b-2 border-primary font-bold text-primary cursor-default">
-                        Criar conta
-                    </div>
+                    <h2 className="text-xl font-semibold text-foreground">Crie sua conta</h2>
+                    <p className="text-sm text-muted-foreground">Comece a criar vídeos com IA hoje mesmo</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm">
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSignup} className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium" htmlFor="name">Nome</label>
+                        <label className="text-sm font-medium text-foreground">Nome completo</label>
                         <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            id="name"
                             type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="João Silva"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium" htmlFor="email">Email</label>
+                        <label className="text-sm font-medium text-foreground">Email</label>
                         <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            id="email"
                             type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             required
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="seu@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium" htmlFor="password">Senha</label>
-                        <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            id="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium" htmlFor="confirmPassword">Confirmar senha</label>
-                        <input
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            id="confirmPassword"
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                            required
-                        />
+                    <div className="row flex gap-4">
+                        <div className="space-y-2 flex-1">
+                            <label className="text-sm font-medium text-foreground">Senha</label>
+                            <input
+                                type="password"
+                                required
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2 flex-1">
+                            <label className="text-sm font-medium text-foreground">Confirmar</label>
+                            <input
+                                type="password"
+                                required
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="••••••••"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                        </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 pt-2">
-                        <input
-                            type="checkbox"
-                            id="terms"
-                            checked={formData.agreeToTerms}
-                            onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
-                            className="h-4 w-4 rounded border-input ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            required
-                        />
-                        <label htmlFor="terms" className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Li e concordo com os <a href="#" className="underline hover:text-foreground">Termos de Uso</a> e a <a href="#" className="underline hover:text-foreground">Política de Privacidade</a>
+                    <div className="flex items-center space-x-2">
+                        <input type="checkbox" id="terms" className="rounded border-gray-300 text-primary focus:ring-primary" required />
+                        <label htmlFor="terms" className="text-xs text-muted-foreground">
+                            Concordo com os <a href="#" className="underline hover:text-primary">Termos de Serviço</a> e <a href="#" className="underline hover:text-primary">Política de Privacidade</a>.
                         </label>
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full bg-primary text-primary-foreground h-10 rounded-md font-medium hover:bg-primary/90 transition-colors mt-4"
+                        disabled={loading}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
                     >
-                        Criar conta
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Criar Conta'}
                     </button>
                 </form>
+
+                <div className="mt-6 text-center text-sm">
+                    <span className="text-muted-foreground">Já tem uma conta? </span>
+                    <Link to="/login" className="font-medium text-primary hover:underline">
+                        Entrar
+                    </Link>
+                </div>
             </div>
         </div>
     );
