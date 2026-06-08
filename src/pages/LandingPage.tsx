@@ -23,16 +23,10 @@ const LandingPage: React.FC = () => {
 
                 <div className="grid gap-4 w-full">
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => navigate('/dashboard')}
                         className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                        Fazer login
-                    </button>
-                    <button
-                        onClick={() => navigate('/signup')}
-                        className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all hover:scale-[1.02] active:scale-[0.98] border border-border/50"
-                    >
-                        Criar conta
+                        Entrar no Studio
                     </button>
                 </div>
             </div>

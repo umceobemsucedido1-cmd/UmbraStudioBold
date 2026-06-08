@@ -1,30 +1,18 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
-import { useAuthStore } from './store/useAuthStore';
 
 // Protected Route Component
+// AUTH DESATIVADA: acesso liberado para qualquer pessoa, sem necessidade de login.
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuthStore();
-
-  if (isLoading) return <div className="h-screen flex items-center justify-center bg-background text-foreground">Carregando...</div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
-
   return <>{children}</>;
 };
 
 function App() {
-  const { initialize } = useAuthStore();
-
-  useEffect(() => {
-    console.log('App Mounted. Initializing Auth...');
-    initialize();
-  }, [initialize]);
-
   return (
     <Router>
       <Routes>
